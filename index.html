@@ -45,13 +45,13 @@
   <script>
     // --- CONFIGURACIÓN CRÍTICA ---
     // REEMPLAZA ESTA URL CON TU ENLACE DE IMPLEMENTACIÓN DE APPS SCRIPT
-    const API_URL = "";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyfd9uxr32Xad___flZFT2BCF3d9nV2FEoPi1N2GvhH-olvAZI59jDXMid18kpt5KEbpg/exec";
 
     document.addEventListener("DOMContentLoaded", function() {
       fetchGiftsFromBackend();
     });
 
-    // Petición HTTP nativa usando FETCH en lugar de google.script.run
+    // Petición HTTP nativa usando FETCH hacia la API del Web App
     function fetchGiftsFromBackend() {
       document.getElementById("loading").classList.remove("hidden");
       document.getElementById("gifts-container").classList.add("hidden");
@@ -94,6 +94,14 @@
               </div>
               <div class="p-5 pb-3">
                 <h3 class="font-medium text-slate-800 text-sm line-clamp-2 min-h-[2.5rem]">${gift.titulo}</h3>
+                
+                ${gift.precio && gift.precio !== "No detectado" ? `
+                  <div class="mt-2 flex items-center gap-1 text-emerald-600 font-semibold text-sm">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Precio ref:</span>
+                    <span>${typeof gift.precio === 'number' ? 'S/. ' + gift.precio.toFixed(2) : gift.precio}</span>
+                  </div>
+                ` : ''}
+
                 ${gift.detalles ? `
                   <div class="mt-3 bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 text-xs text-indigo-950 flex flex-col gap-0.5">
                     <span class="font-bold text-[9px] text-indigo-500 uppercase">Especificación:</span>
@@ -128,7 +136,6 @@
         if (result.isConfirmed) {
           Swal.showLoading();
           
-          // Ejecución remota vía FETCH por GET (Evita bloqueos CORS de preflight)
           fetch(`${API_URL}?action=buyGift&id=${id}`)
             .then(res => res.json())
             .then(res => {
