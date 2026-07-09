@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Lista de Regalos 🎂</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .purchased-card { filter: grayscale(35%); background-color: #f8fafc; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <header class="bg-white border-b border-slate-100 py-10 px-4 text-center shadow-sm">
+    <div class="max-w-3xl mx-auto">
+      <span class="text-4xl animate-bounce inline-block">🎂</span>
+      <h1 class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">Mi Lista de Regalos</h1>
+      <p class="text-slate-500 mt-3 text-sm max-w-xl mx-auto">
+        ¡Hola! Si deseas hacerme un detalle, aquí tienes la lista oficial. Marca el que elijas para que nadie más lo repita. ¡Gracias!
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-12">
+    <div id="loading" class="flex flex-col items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600"></div>
+      <p class="text-slate-500 mt-4 font-medium animate-pulse">Consultando catálogo en la nube...</p>
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 max-w-md mx-auto shadow-sm">
+      <span class="text-4xl">🎁</span>
+      <p class="text-slate-600 font-semibold mt-3">No hay regalos registrados aún</p>
+    </div>
+
+    <div id="gifts-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+  </main>
+
+  <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white mt-12">
+    Lista de Cumpleaños Independiente &copy; 2026
+  </footer>
+
+  <script>
+    // --- CONFIGURACIÓN CRÍTICA ---
+    // REEMPLAZA ESTA URL CON TU ENLACE DE IMPLEMENTACIÓN DE APPS SCRIPT
+    const API_URL = "https://script.google.com/macros/s/AQUÍ_VA_TU_ID_DE_DESPLIEGUE/exec";
+
+    document.addEventListener("DOMContentLoaded", function() {
+      fetchGiftsFromBackend();
+    });
+
+    // Petición HTTP nativa usando FETCH en lugar de google.script.run
+    function fetchGiftsFromBackend() {
+      document.getElementById("loading").classList.remove("hidden");
+      document.getElementById("gifts-container").classList.add("hidden");
+      document.getElementById("empty-state").classList.add("hidden");
+
+      fetch(`${API_URL}?action=getGifts`)
+        .then(response => response.json())
+        .then(renderGifts)
+        .catch(handleServerError);
+    }
+
+    function renderGifts(response) {
+      document.getElementById("loading").classList.add("hidden");
+      
+      if (!response.success) {
+        Swal.fire("Error de API", response.error, "error");
+        return;
+      }
+
+      const gifts = response.data;
+      const container = document.getElementById("gifts-container");
+      container.innerHTML = "";
+
+      if (gifts.length === 0) {
+        document.getElementById("empty-state").classList.remove("hidden");
+        return;
+      }
+
+      document.getElementById("gifts-container").classList.remove("hidden");
+
+      gifts.forEach(gift => {
+        const isAvailable = gift.estado === "Disponible";
+        
+        const cardHtml = `
+          <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 flex flex-col justify-between transition-all duration-300 hover:shadow-xl ${!isAvailable ? 'purchased-card shadow-none' : ''}">
+            <div>
+              <div class="relative bg-slate-50 h-48 w-full flex items-center justify-center overflow-hidden">
+                <img src="${gift.imagen}" alt="${gift.titulo}" class="object-cover w-full h-full" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=500'">
+                ${!isAvailable ? '<div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center"><span class="text-white font-bold tracking-wider text-xs uppercase bg-slate-900/60 py-1.5 px-3 rounded-full">Ya comprado ❤️</span></div>' : ''}
+              </div>
+              <div class="p-5 pb-3">
+                <h3 class="font-medium text-slate-800 text-sm line-clamp-2 min-h-[2.5rem]">${gift.titulo}</h3>
+                ${gift.detalles ? `
+                  <div class="mt-3 bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 text-xs text-indigo-950 flex flex-col gap-0.5">
+                    <span class="font-bold text-[9px] text-indigo-500 uppercase">Especificación:</span>
+                    <span>${gift.detalles}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+            <div class="p-5 pt-2 mt-auto">
+              <a href="${gift.enlace}" target="_blank" class="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-xl text-sm mb-2">Ver Tienda 🔗</a>
+              ${isAvailable ? `
+                <button onclick="confirmPurchase('${gift.id}', '${gift.titulo}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-xl text-sm shadow-sm">Marcar como comprado 🎁</button>
+              ` : `
+                <button disabled class="w-full bg-slate-200 text-slate-400 font-medium py-2 px-4 rounded-xl text-sm cursor-not-allowed">Reservado</button>
+              `}
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    function confirmPurchase(id, name) {
+      Swal.fire({
+        title: '¿Confirmas la compra?',
+        text: `Vas a marcar "${name}" como comprado.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.showLoading();
+          
+          // Ejecución remota vía FETCH por GET (Evita bloqueos CORS de preflight)
+          fetch(`${API_URL}?action=buyGift&id=${id}`)
+            .then(res => res.json())
+            .then(res => {
+              if (res.success) {
+                Swal.fire('¡Muchas Gracias!', res.message, 'success');
+              } else {
+                Swal.fire('Aviso', res.message, 'warning');
+              }
+              fetchGiftsFromBackend();
+            })
+            .catch(handleServerError);
+        }
+      });
+    }
+
+    function handleServerError() {
+      document.getElementById("loading").classList.add("hidden");
+      Swal.fire("Error de Conexión", "No se pudo comunicar con el servidor API de Google.", "error");
+    }
+  </script>
+</body>
+</html>
