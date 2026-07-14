@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mi Lista de Regalos - Riu 2026 🎂</title>
+  <title>Mi Lista de Regalos 🎂</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,19 +12,19 @@
     .purchased-card { filter: grayscale(35%); background-color: #f8fafc; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+<body class="bg-slate-50 text-slate-800 min-h-screen">
 
-  <header class="bg-white border-b border-slate-100 py-10 px-4 text-center shadow-sm">
+  <header class="bg-white border-b border-slate-100 py-8 px-4 text-center shadow-sm">
     <div class="max-w-3xl mx-auto">
       <span class="text-4xl animate-bounce inline-block">🎂</span>
-      <h1 class="text-3xl font-bold text-slate-900 mt-2 tracking-tight">Mi Lista de Regalos - Riu 2026</h1>
-      <p class="text-slate-500 mt-3 text-sm max-w-xl mx-auto">
-        ¡Hola! Si deseas hacerme un detalle, aquí tienes la lista oficial. Marca el que elijas para que nadie más lo repita. ¡Gracias!
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-2 tracking-tight">Mi Lista de Regalos - RIU 2026</h1>
+      <p class="text-slate-500 mt-2 text-xs sm:text-sm max-w-xl mx-auto">
+        ¡Hola! Organiza la lista como prefieras usando los filtros de abajo. Marca tu elección para evitar regalos repetidos. ¡Muchas gracias por tu detalle!
       </p>
     </div>
   </header>
 
-  <section class="max-w-7xl mx-auto px-4 mt-8 w-full">
+  <section class="max-w-7xl mx-auto px-4 mt-8">
     <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
       
       <div class="w-full sm:w-auto flex items-center gap-2">
@@ -48,37 +48,35 @@
     </div>
   </section>
 
-  <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full">
-    
+  <main class="max-w-7xl mx-auto px-4 py-8">
     <div id="loading" class="flex flex-col items-center justify-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-indigo-600"></div>
-      <p class="text-slate-500 mt-4 font-medium animate-pulse">Consultando catálogo en la nube...</p>
+      <p class="text-slate-500 mt-4 font-medium animate-pulse">Sincronizando regalos con Sheets...</p>
     </div>
 
-    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 max-w-md mx-auto shadow-sm px-4">
+    <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 max-w-md mx-auto shadow-sm">
       <span class="text-4xl">🎁</span>
       <p class="text-slate-600 font-semibold mt-3">No se encontraron regalos con este filtro</p>
     </div>
 
-    <div id="gifts-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+    <div id="gifts-container" class="hidden grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
   </main>
 
-  <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white mt-12 w-full">
-    mrazurisa &copy; 2026
+  <footer class="text-center py-6 text-xs text-slate-400 border-t border-slate-200 bg-white mt-12">
+   RIUSHU &copy; 2026
   </footer>
 
   <script>
     // --- CONFIGURACIÓN CRÍTICA ---
-    // Mantenemos tu URL original intacta
+    // REEMPLAZA ESTA URL CON TU ENLACE DE IMPLEMENTACIÓN DE APPS SCRIPT
     const API_URL = "https://script.google.com/macros/s/AKfycbwM6vXuoDXvAcQR0whH22kMkK0StCOq57qUSLoytbpbtTkoQ44qIWBmd-VwljVWGufnHg/exec";
 
-    let allGifts = []; // Memoria caché para evitar peticiones repetidas al servidor
+    let allGifts = []; // Memoria caché global en cliente
 
     document.addEventListener("DOMContentLoaded", function() {
       fetchGiftsFromBackend();
     });
 
-    // Petición HTTP nativa hacia la API de Google Apps Script
     function fetchGiftsFromBackend() {
       document.getElementById("loading").classList.remove("hidden");
       document.getElementById("gifts-container").classList.add("hidden");
@@ -93,19 +91,19 @@
             return;
           }
           allGifts = response.data;
-          buildCategoryFilter(); // Generar filtros dinámicos
-          applyFiltersAndSort(); // Renderizar tarjetas ordenadas
+          buildCategoryFilter(); // Generar las categorías dinámicamente
+          applyFiltersAndSort(); // Ejecutar renderizado inicial
         })
         .catch(handleServerError);
     }
 
-    // Extrae y construye las opciones del selector según lo que tengas en Sheets
+    // Genera las opciones del menú desplegable de categorías de manera dinámica
     function buildCategoryFilter() {
       const categorySelect = document.getElementById("filter-category");
       categorySelect.innerHTML = '<option value="all">Todas las categorías</option>';
       
-      // Obtener lista limpia de categorías únicas sin repetir
-      const uniqueCategories = [...new Set(allGifts.map(g => g.categoria).filter(c => c && c.trim() !== ""))];
+      // Extraer categorías únicas filtrando textos vacíos
+      const uniqueCategories = [...new Set(allGifts.map(g => g.categoria).filter(c => c.trim() !== ""))];
       
       uniqueCategories.forEach(cat => {
         const option = document.createElement("option");
@@ -115,19 +113,19 @@
       });
     }
 
-    // Lógica encargada de interceptar los filtros sin refrescar la página
+    // Procesa el filtrado y ordenamiento local en el navegador del cliente
     function applyFiltersAndSort() {
       const selectedCategory = document.getElementById("filter-category").value;
       const selectedSort = document.getElementById("sort-by").value;
       
       let processedGifts = [...allGifts];
 
-      // 1. Filtrar por Categoría
+      // 1. Filtrado por Categoría
       if (selectedCategory !== "all") {
         processedGifts = processedGifts.filter(g => g.categoria === selectedCategory);
       }
 
-      // 2. Ejecutar Métodos de Ordenamiento
+      // 2. Ordenamiento
       if (selectedSort === "price-asc") {
         processedGifts.sort((a, b) => a.precio - b.precio);
       } 
@@ -142,12 +140,11 @@
         processedGifts.sort((a, b) => (a.estado === "Disponible" ? -1 : 1));
       }
 
-      // 3. Renderizar resultados procesados
-      renderGiftsGrid(processedGifts);
+      // 3. Dibujar resultados en pantalla
+      displayGiftsCards(processedGifts);
     }
 
-    // Dibuja las tarjetas en el DOM
-    function renderGiftsGrid(gifts) {
+    function displayGiftsCards(gifts) {
       const container = document.getElementById("gifts-container");
       container.innerHTML = "";
 
@@ -163,57 +160,46 @@
       gifts.forEach(gift => {
         const isAvailable = gift.estado === "Disponible";
         
-        // Estilos inteligentes visuales para los niveles de prioridad
+        // Asignación inteligente de colores de prioridad
         let priorityStyle = "bg-slate-100 text-slate-600 border-slate-200";
-        if (gift.prioridad && gift.prioridad.toLowerCase() === "alta") {
-          priorityStyle = "bg-rose-50 text-rose-700 border-rose-100 font-semibold";
-        } else if (gift.prioridad && gift.prioridad.toLowerCase() === "media") {
-          priorityStyle = "bg-amber-50 text-amber-700 border-amber-100";
-        }
-        
+        if (gift.prioridad.toLowerCase() === "alta") priorityStyle = "bg-rose-50 text-rose-700 border-rose-100 font-semibold";
+        if (gift.prioridad.toLowerCase() === "media") priorityStyle = "bg-amber-50 text-amber-700 border-amber-100";
+
         const cardHtml = `
           <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 flex flex-col justify-between transition-all duration-300 hover:shadow-xl ${!isAvailable ? 'purchased-card shadow-none' : ''}">
             <div>
-              <div class="relative bg-white h-44 sm:h-48 w-full flex items-center justify-center overflow-hidden border-b border-slate-100 p-3">
+              <div class="relative bg-white h-48 w-full flex items-center justify-center overflow-hidden border-b border-slate-100 p-3">
                 <img src="${gift.imagen}" alt="${gift.titulo}" class="object-contain w-full h-full" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=500'">
-                ${!isAvailable ? '<div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center"><span class="text-white font-bold tracking-wider text-xs uppercase bg-slate-900/60 py-1.5 px-3 rounded-full shadow-sm">Ya comprado ❤️</span></div>' : ''}
+                ${!isAvailable ? '<div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center"><span class="text-white font-bold tracking-wider text-xs uppercase bg-slate-900/60 py-1.5 px-3 rounded-full">Ya comprado ❤️</span></div>' : ''}
               </div>
               
-              <div class="p-5 pb-3">
-                <div class="flex gap-1.5 items-center mb-2.5 flex-wrap">
-                  <span class="text-[9px] uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-md font-medium">${gift.categoria || 'Otros'}</span>
-                  <span class="text-[9px] uppercase tracking-wider border px-2 py-0.5 rounded-md ${priorityStyle}">Deseo: ${gift.prioridad || 'Media'}</span>
+              <div class="p-4 sm:p-5 pb-2">
+                <div class="flex gap-1.5 items-center mb-2 flex-wrap">
+                  <span class="text-[9px] uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded-md font-medium">${gift.categoria}</span>
+                  <span class="text-[9px] uppercase tracking-wider border px-2 py-0.5 rounded-md ${priorityStyle}">Deseo: ${gift.prioridad}</span>
                 </div>
 
-                <h3 class="font-medium text-slate-800 text-xs sm:text-sm line-clamp-2 min-h-[2.5rem] mb-1">${gift.titulo}</h3>
+                <h3 class="font-medium text-slate-800 text-xs sm:text-sm line-clamp-2 leading-snug min-h-[2.5rem] mb-1">${gift.titulo}</h3>
                 
-                ${gift.precio && gift.precio !== 0 && gift.precio !== "No detectado" ? `
-                  <div class="mt-2 flex items-center gap-1 text-emerald-600 font-semibold text-sm">
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Precio ref:</span>
-                    <span class="text-emerald-600 font-bold text-sm sm:text-base">S/. ${parseFloat(gift.precio).toFixed(2)}</span>
-                  </div>
-                ` : `
-                  <div class="mt-2 flex items-center gap-1 text-slate-400 font-semibold text-xs">
-                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Precio ref:</span>
-                    <span class="font-normal italic">Consultar tienda</span>
-                  </div>
-                `}
+                <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wide">
+                  Precio Ref: <span class="text-emerald-600 font-bold text-sm sm:text-base">${gift.precio > 0 ? 'S/. ' + gift.precio.toFixed(2) : 'Consultar'}</span>
+                </p>
 
                 ${gift.detalles ? `
-                  <div class="mt-3 bg-indigo-50/70 border border-indigo-100 rounded-xl p-2.5 text-xs text-indigo-950 flex flex-col gap-0.5">
-                    <span class="font-bold text-[9px] text-indigo-500 uppercase">Especificación:</span>
-                    <span class="text-slate-700">${gift.detalles}</span>
+                  <div class="mt-2.5 bg-indigo-50/60 border border-indigo-100 rounded-xl p-2.5 text-[11px] text-indigo-950 flex flex-col gap-0.5">
+                    <span class="font-bold text-[9px] text-indigo-400 uppercase tracking-wide">Nota:</span>
+                    <span class="text-slate-600">${gift.detalles}</span>
                   </div>
                 ` : ''}
               </div>
             </div>
-            
-            <div class="p-5 pt-2 mt-auto">
-              <a href="${gift.enlace}" target="_blank" class="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-xl text-sm mb-2 transition-colors">Ver Tienda 🔗</a>
+
+            <div class="p-4 sm:p-5 pt-2 mt-auto">
+              <a href="${gift.enlace}" target="_blank" rel="noopener noreferrer" class="block w-full text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-3 rounded-xl text-xs sm:text-sm mb-2 transition-colors">Ver Tienda 🔗</a>
               ${isAvailable ? `
-                <button onclick="buttonConfirmPurchase('${gift.id}', '${gift.titulo}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-xl text-sm shadow-sm transition-all">Marcar como comprado 🎁</button>
+                <button onclick="confirmPurchase('${gift.id}', '${gift.titulo}')" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-3 rounded-xl text-xs sm:text-sm shadow-sm transition-all">Marcar como comprado 🎁</button>
               ` : `
-                <button disabled class="w-full bg-slate-200 text-slate-400 font-medium py-2 px-4 rounded-xl text-sm cursor-not-allowed">Reservado</button>
+                <button disabled class="w-full bg-slate-200 text-slate-400 font-medium py-2 px-3 rounded-xl text-xs sm:text-sm cursor-not-allowed">Reservado</button>
               `}
             </div>
           </div>
@@ -222,8 +208,7 @@
       });
     }
 
-    // Renombrado para evitar colisiones
-    function buttonConfirmPurchase(id, name) {
+    function confirmPurchase(id, name) {
       Swal.fire({
         title: '¿Confirmas la compra?',
         text: `Vas a marcar "${name}" como comprado.`,
@@ -234,7 +219,6 @@
       }).then((result) => {
         if (result.isConfirmed) {
           Swal.showLoading();
-          
           fetch(`${API_URL}?action=buyGift&id=${id}`)
             .then(res => res.json())
             .then(res => {
@@ -243,7 +227,7 @@
               } else {
                 Swal.fire('Aviso', res.message, 'warning');
               }
-              fetchGiftsFromBackend(); // Recarga reactiva local
+              fetchGiftsFromBackend(); // Recargar datos limpios
             })
             .catch(handleServerError);
         }
