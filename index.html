@@ -164,12 +164,16 @@
         const isAvailable = gift.estado === "Disponible";
         
         // Estilos inteligentes visuales para los niveles de prioridad
-        let priorityStyle = "bg-slate-100 text-slate-600 border-slate-200";
-        if (gift.prioridad && gift.prioridad.toLowerCase() === "alta") {
-          priorityStyle = "bg-rose-50 text-rose-700 border-rose-100 font-semibold";
-        } else if (gift.prioridad && gift.prioridad.toLowerCase() === "media") {
-          priorityStyle = "bg-amber-50 text-amber-700 border-amber-100";
-        }
+        let priorityStyle = "bg-slate-100 text-slate-600 border-slate-200"; // Color gris por defecto
+const prioridadLimpia = gift.prioridad ? gift.prioridad.toLowerCase().trim() : "";
+
+if (prioridadLimpia === "alta") {
+  priorityStyle = "bg-rose-50 text-rose-700 border-rose-200 font-semibold"; // Rojo/Rosa suave
+} else if (prioridadLimpia === "media") {
+  priorityStyle = "bg-amber-50 text-amber-700 border-amber-200 font-medium"; // Naranja/Ámbar cálido
+} else if (prioridadLimpia === "baja") {
+  priorityStyle = "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium"; // Verde esmeralda suave
+}
         
         const cardHtml = `
           <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 flex flex-col justify-between transition-all duration-300 hover:shadow-xl ${!isAvailable ? 'purchased-card shadow-none' : ''}">
