@@ -69,16 +69,14 @@
 
   <script>
     // --- CONFIGURACIÓN CRÍTICA ---
-    // Mantenemos tu URL original intacta
     const API_URL = "https://script.google.com/macros/s/AKfycbzeUEJr7O_gz6sfxWQRAyoMRfmfDIaMqEWSKyUP8YRLtW3RDkYf3hV88FOBmElmZSRr9Q/exec";
 
-    let allGifts = []; // Memoria caché para evitar peticiones repetidas al servidor
+    let allGifts = []; 
 
     document.addEventListener("DOMContentLoaded", function() {
       fetchGiftsFromBackend();
     });
 
-    // Petición HTTP nativa hacia la API de Google Apps Script
     function fetchGiftsFromBackend() {
       document.getElementById("loading").classList.remove("hidden");
       document.getElementById("gifts-container").classList.add("hidden");
@@ -93,18 +91,16 @@
             return;
           }
           allGifts = response.data;
-          buildCategoryFilter(); // Generar filtros dinámicos
-          applyFiltersAndSort(); // Renderizar tarjetas ordenadas
+          buildCategoryFilter(); 
+          applyFiltersAndSort(); 
         })
         .catch(handleServerError);
     }
 
-    // Extrae y construye las opciones del selector según lo que tengas en Sheets
     function buildCategoryFilter() {
       const categorySelect = document.getElementById("filter-category");
       categorySelect.innerHTML = '<option value="all">Todas las categorías</option>';
       
-      // Obtener lista limpia de categorías únicas sin repetir
       const uniqueCategories = [...new Set(allGifts.map(g => g.categoria).filter(c => c && c.trim() !== ""))];
       
       uniqueCategories.forEach(cat => {
@@ -115,7 +111,6 @@
       });
     }
 
-    // Lógica encargada de interceptar los filtros sin refrescar la página
     function applyFiltersAndSort() {
       const selectedCategory = document.getElementById("filter-category").value;
       const selectedSort = document.getElementById("sort-by").value;
@@ -135,18 +130,21 @@
         processedGifts.sort((a, b) => b.precio - a.precio);
       } 
       else if (selectedSort === "priority-desc") {
-        const weights = { "Alta": 3, "Media": 2, "Baja": 1 };
-        processedGifts.sort((a, b) => (weights[b.prioridad] || 0) - (weights[a.prioridad] || 0));
+        // CORRECCIÓN: Soporte unificado para "Alto" y "Bajo" (masculinos) y "Alta/Baja" (femeninos)
+        const weights = { "alto": 3, "alta": 3, "medio": 2, "media": 2, "bajo": 1, "baja": 1 };
+        processedGifts.sort((a, b) => {
+          const pA = (a.prioridad || "").toLowerCase().trim();
+          const pB = (b.prioridad || "").toLowerCase().trim();
+          return (weights[pB] || 0) - (weights[pA] || 0);
+        });
       } 
       else if (selectedSort === "available-first") {
         processedGifts.sort((a, b) => (a.estado === "Disponible" ? -1 : 1));
       }
 
-      // 3. Renderizar resultados procesados
       renderGiftsGrid(processedGifts);
     }
 
-    // Dibuja las tarjetas en el DOM
     function renderGiftsGrid(gifts) {
       const container = document.getElementById("gifts-container");
       container.innerHTML = "";
@@ -163,17 +161,17 @@
       gifts.forEach(gift => {
         const isAvailable = gift.estado === "Disponible";
         
-        // Estilos inteligentes visuales para los niveles de prioridad
-        let priorityStyle = "bg-slate-100 text-slate-600 border-slate-200"; // Color gris por defecto
-const prioridadLimpia = gift.prioridad ? gift.prioridad.toLowerCase().trim() : "";
+        // CORRECCIÓN: Soporte de estilos de 3 colores para prioridad "alto/alta", "medio/media" y "bajo/baja"
+        let priorityStyle = "bg-slate-100 text-slate-600 border-slate-200"; 
+        const prioridadLimpia = gift.prioridad ? gift.prioridad.toLowerCase().trim() : "";
 
-if (prioridadLimpia === "alta") {
-  priorityStyle = "bg-rose-50 text-rose-700 border-rose-200 font-semibold"; // Rojo/Rosa suave
-} else if (prioridadLimpia === "media") {
-  priorityStyle = "bg-amber-50 text-amber-700 border-amber-200 font-medium"; // Naranja/Ámbar cálido
-} else if (prioridadLimpia === "baja") {
-  priorityStyle = "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium"; // Verde esmeralda suave
-}
+        if (prioridadLimpia === "alta" || prioridadLimpia === "alto") {
+          priorityStyle = "bg-rose-50 text-rose-700 border-rose-200 font-semibold"; // Rojo suave
+        } else if (prioridadLimpia === "media" || prioridadLimpia === "medio") {
+          priorityStyle = "bg-amber-50 text-amber-700 border-amber-200 font-medium"; // Ámbar suave
+        } else if (prioridadLimpia === "baja" || prioridadLimpia === "bajo") {
+          priorityStyle = "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium"; // Verde suave
+        }
         
         const cardHtml = `
           <div class="bg-white rounded-2xl shadow-md overflow-hidden border border-slate-100 flex flex-col justify-between transition-all duration-300 hover:shadow-xl ${!isAvailable ? 'purchased-card shadow-none' : ''}">
@@ -226,7 +224,6 @@ if (prioridadLimpia === "alta") {
       });
     }
 
-    // Renombrado para evitar colisiones
     function buttonConfirmPurchase(id, name) {
       Swal.fire({
         title: '¿Confirmas la compra?',
@@ -247,7 +244,7 @@ if (prioridadLimpia === "alta") {
               } else {
                 Swal.fire('Aviso', res.message, 'warning');
               }
-              fetchGiftsFromBackend(); // Recarga reactiva local
+              fetchGiftsFromBackend(); 
             })
             .catch(handleServerError);
         }
